@@ -1,10 +1,21 @@
 import streamlit as st
+
+try:
+    key = st.secrets["OPENWEATHER_API_KEY"]
+    st.success(f"Secret loaded. Length = {len(key)}")
+except Exception as e:
+    st.error(f"Secret error: {e}")
+
 import pandas as pd
 
 from weather import (
     get_current_weather,
     get_forecast
 )
+from weather import API_KEY
+
+st.write("API key loaded:", API_KEY[:5] + "..." + API_KEY[-5:])
+
 
 # -------------------------
 # Page Configuration
