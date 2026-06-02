@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_KEY = os.getenv("OPENWEATHER_API_KEY")
+try:
+    API_KEY = st.secrets["OPENWEATHER_API_KEY"]
+except Exception:
+    API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 
 def get_current_weather(city):
