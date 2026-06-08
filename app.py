@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 
@@ -38,12 +38,16 @@ if st.button("Get Weather"):
     current = get_current_weather(city)
     forecast = get_forecast(city)
 
+    timezone_offset = current["timezone"]
+
     sunrise_time = datetime.fromtimestamp(
-    current["sys"]["sunrise"]
+        current["sys"]["sunrise"] + timezone_offset,
+        tz=timezone.utc
     )
 
     sunset_time = datetime.fromtimestamp(
-        current["sys"]["sunset"]
+        current["sys"]["sunset"] + timezone_offset,
+        tz=timezone.utc
     )
 
     # -------------------------
