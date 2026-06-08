@@ -1,21 +1,13 @@
 import streamlit as st
-
-try:
-    key = st.secrets["OPENWEATHER_API_KEY"]
-    st.success(f"Secret loaded. Length = {len(key)}")
-except Exception as e:
-    st.error(f"Secret error: {e}")
-
 import pandas as pd
+from datetime import datetime
+
+
 
 from weather import (
     get_current_weather,
     get_forecast
 )
-from weather import API_KEY
-
-st.write("API key loaded:", API_KEY[:5] + "..." + API_KEY[-5:])
-
 
 # -------------------------
 # Page Configuration
@@ -46,13 +38,27 @@ if st.button("Get Weather"):
     current = get_current_weather(city)
     forecast = get_forecast(city)
 
-    # Error handling
+    sunrise_time = datetime.fromtimestamp(
+    current["sys"]["sunrise"]
+    )
+
+    sunset_time = datetime.fromtimestamp(
+        current["sys"]["sunset"]
+    )
+
+    # -------------------------
+    # Error Handling
+    # -------------------------
+
+    if current is None:
+        st.error("Unable to fetch weather data.")
+        st.stop()
 
     if current.get("cod") != 200:
         st.error(
             f"Unable to fetch weather data for '{city}'"
         )
-        st.write(current)
+        st.json(current)
         st.stop()
 
     # -------------------------
@@ -61,7 +67,7 @@ if st.button("Get Weather"):
 
     st.subheader("Current Weather")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
 
     col1.metric(
         "Temperature",
@@ -82,6 +88,15 @@ if st.button("Get Weather"):
         "Wind Speed",
         f"{current['wind']['speed']} m/s"
     )
+    col5.metric(
+    "Sunrise",
+    sunrise_time.strftime("%H:%M")
+    )
+
+    col6.metric(
+        "Sunset",
+        sunset_time.strftime("%H:%M")
+    )
 
     st.write(
         f"**Condition:** {current['weather'][0]['description'].title()}"
@@ -93,32 +108,30 @@ if st.button("Get Weather"):
     # Forecast
     # -------------------------
 
-    st.subheader("5-Day Forecast")
+    if forecast and "list" in forecast:
 
-    forecast_rows = []
+        forecast_rows = []
 
-    for item in forecast["list"]:
+        for item in forecast["list"]:
 
-        forecast_rows.append({
-            "Time": item["dt_txt"],
-            "Temperature": item["main"]["temp"]
-        })
+            forecast_rows.append({
+                "Time": item["dt_txt"],
+                "Temperature": item["main"]["temp"]
+            })
 
-    df = pd.DataFrame(forecast_rows)
+        df = pd.DataFrame(forecast_rows)
 
-    st.line_chart(
-        df.set_index("Time")
-    )
+        st.subheader("5-Day Forecast")
 
-    st.divider()
+        st.line_chart(
+            df.set_index("Time")
+        )
 
-    # -------------------------
-    # Forecast Table
-    # -------------------------
+        st.divider()
 
-    st.subheader("Forecast Data")
+        st.subheader("Forecast Data")
 
-    st.dataframe(
-        df,
-        use_container_width=True
-    )
+        st.dataframe(
+            df,
+            width="stretch"
+        )
